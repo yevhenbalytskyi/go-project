@@ -1,0 +1,9 @@
+#chat-form {
+    position: fixed;
+    bottom: 4%;
+    width: 60%;
+}
+
+input {
+    width: 50%;
+}
