@@ -7,3 +7,38 @@
 input {
     width: 50%;
 }
+
+/* General styling for the chat container */
+#chat {
+    width: 100%;
+    max-width: 600px;
+    margin: auto;
+    font-family: Arial, sans-serif;
+    padding: 10px;
+    background: #f9f9f9;
+}
+
+/* Styling the messages list */
+#messages {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+/* Styling individual messages */
+#messages li {
+    margin: 10px 0; /* Add space between messages */
+    padding: 10px 15px;
+    border-radius: 15px;
+    background-color: #e1f5fe;
+    color: #0277bd;
+    font-size: 14px;
+    line-height: 1.4;
+    word-wrap: break-word; /* Ensure long words wrap to the next line */
+    max-width: 90%; /* Limit width for readability */
+    display: block; /* Ensure each message takes its own line */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
