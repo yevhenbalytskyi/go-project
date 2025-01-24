@@ -13,7 +13,7 @@ var broadcast = make(chan string)
 
 func main() {
 	// Serve the frontend files from the "public" folder
-	var fs http.Handler = http.FileServer(http.Dir("./public"))
+	fs := http.FileServer(http.Dir("./public"))
 	http.Handle("/", fs)
 
 	// WebSocket endpoint
@@ -22,12 +22,15 @@ func main() {
 	// Start handling messages
 	go handleMessages()
 
-	fmt.Println("Server started at http://localhost:8080")
-	http.ListenAndServe(":8080", nil)
+	// Use the self-signed certificate
+	fmt.Println("Server started at https://localhost:8080")
+	err := http.ListenAndServeTLS(":8080", "cert.pem", "key.pem", nil)
+	if err != nil {
+		fmt.Println("Failed to start server:", err)
+	}
 }
 
 func handleConnections(w http.ResponseWriter, r *http.Request) {
-	// Upgrade the connection to WebSocket
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		fmt.Println("WebSocket upgrade error:", err)
@@ -35,27 +38,22 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close()
 
-	// Register the client
 	clients[conn] = true
 
 	for {
-		// Read message from client
 		_, msg, err := conn.ReadMessage()
 		if err != nil {
 			fmt.Println("Read error:", err)
 			delete(clients, conn)
 			break
 		}
-		// Send the message to the broadcast channel
 		broadcast <- string(msg)
 	}
 }
 
 func handleMessages() {
 	for {
-		// Get the next message
 		msg := <-broadcast
-		// Send it to all connected clients
 		for client := range clients {
 			err := client.WriteMessage(websocket.TextMessage, []byte(msg))
 			if err != nil {
