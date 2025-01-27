@@ -9,20 +9,22 @@ import (
 
 var upgrader = websocket.Upgrader{}
 var clients = make(map[*websocket.Conn]bool)
-var broadcast = make(chan string)
+var broadcast = make(chan Message)
+
+// Message struct
+type Message struct {
+	Nickname string `json:"nickname"`
+	Message  string `json:"message"`
+}
 
 func main() {
-	// Serve the frontend files from the "public" folder
 	fs := http.FileServer(http.Dir("./public"))
 	http.Handle("/", fs)
 
-	// WebSocket endpoint
 	http.HandleFunc("/ws", handleConnections)
 
-	// Start handling messages
 	go handleMessages()
 
-	// Use the self-signed certificate
 	fmt.Println("Server started at https://localhost:8080")
 	err := http.ListenAndServeTLS(":8080", "cert.pem", "key.pem", nil)
 	if err != nil {
@@ -41,13 +43,14 @@ func handleConnections(w http.ResponseWriter, r *http.Request) {
 	clients[conn] = true
 
 	for {
-		_, msg, err := conn.ReadMessage()
+		var msg Message
+		err := conn.ReadJSON(&msg)
 		if err != nil {
 			fmt.Println("Read error:", err)
 			delete(clients, conn)
 			break
 		}
-		broadcast <- string(msg)
+		broadcast <- msg
 	}
 }
 
@@ -55,7 +58,7 @@ func handleMessages() {
 	for {
 		msg := <-broadcast
 		for client := range clients {
-			err := client.WriteMessage(websocket.TextMessage, []byte(msg))
+			err := client.WriteJSON(msg)
 			if err != nil {
 				fmt.Println("Write error:", err)
 				client.Close()

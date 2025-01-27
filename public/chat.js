@@ -1,30 +1,40 @@
 const ws = new WebSocket(`wss://${location.host}/ws`);
 
-const form = document.getElementById('chat-form');
-const input = document.getElementById('message');
+const nicknameForm = document.getElementById('nickname-form');
+const chatForm = document.getElementById('chat-form');
+const nicknameInput = document.getElementById('nickname');
+const messageInput = document.getElementById('message');
 const messages = document.getElementById('messages');
 
-input.focus();
+let nickname = '';
 
-// Scroll to the bottom of the messages box
-const scrollToBottom = () => {
-    messages.scrollTop = messages.scrollHeight;
-};
-
-// Send message when form is submitted
-form.addEventListener('submit', (event) => {
+// Set nickname
+nicknameForm.addEventListener('submit', (event) => {
     event.preventDefault();
-    if (input.value) {
-        ws.send(input.value);
-        input.value = '';
-        input.focus(); // Refocus the input box
+    nickname = nicknameInput.value.trim();
+    if (nickname) {
+        nicknameForm.style.display = 'none';
+        chatForm.style.display = 'block';
+        messageInput.focus();
+    }
+});
+
+// Send message
+chatForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+    const message = messageInput.value.trim();
+    if (message && nickname) {
+        ws.send(JSON.stringify({ nickname, message }));
+        messageInput.value = '';
+        messageInput.focus();
     }
 });
 
 // Display incoming messages
 ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
     const item = document.createElement('li');
-    item.textContent = event.data;
+    item.innerHTML = `<strong>${data.nickname}:</strong> ${data.message}`;
     messages.appendChild(item);
-    scrollToBottom(); // Scroll to the latest message
+    messages.scrollTop = messages.scrollHeight; // Scroll to the bottom
 };
